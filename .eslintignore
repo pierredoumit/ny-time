@@ -1,0 +1,8 @@
+build/*
+**/*.test.ts
+next.config.js
+jest.config.ts
+next-env.d.ts
+coverage/*
+jest.setup.ts
+playwright.config.ts

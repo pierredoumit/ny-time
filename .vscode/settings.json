@@ -1,0 +1,22 @@
+{
+  "[typescript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.formatOnType": false,
+  "editor.stickyScroll.enabled": true,
+  "eslint.codeActionsOnSave.mode": "all",
+  "eslint.format.enable": false,
+  "eslint.run": "onSave",
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "yaml.schemas": {
+    "https://json.schemastore.org/github-workflow.json": "file:///Users/pierredoumitlifebrand.life/Desktop/Personal/Xische%20%26%20Co%20test%20assignment/.github/workflows/deploy.yml"
+  },
+}

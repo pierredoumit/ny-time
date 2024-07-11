@@ -1,0 +1,147 @@
+name: Build and Deploy
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: ✅ Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⬇️ Checkout Repo
+        uses: actions/checkout@v4
+      - name: 🏗 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - name: 💾 Install Project Dependencies
+        run: npm ci
+      - name: ✅ Lint Check
+        run: npm run lint
+
+  format:
+    name: 💅 Prettier
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⬇️ Checkout Repo
+        uses: actions/checkout@v4
+      - name: 🏗 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - name: 💾 Install Project Dependencies
+        run: npm ci
+      - name: 💅 Prettier Check
+        run: npm run format:check
+
+  tsc:
+    name: 📘 TypeScript
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⬇️ Checkout Repo
+        uses: actions/checkout@v4
+      - name: 🏗 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - name: 💾 Install Project Dependencies
+        run: npm ci
+      - name: 📘 TypeScript Check
+        run: npm run types:check
+
+  unit-tests:
+    name: 🧪 Unit Tests
+    needs: [lint, format, tsc]
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⬇️ Checkout Repo
+        uses: actions/checkout@v4
+      - name: 🏗 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - name: 💾 Install Project Dependencies
+        run: npm ci
+      - name: 🧪 Run Unit Tests
+        run: npm test -- --coverage
+
+  e2e-tests:
+    name: 🧪 E2E Tests
+    needs: [lint, format, tsc]
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⬇️ Checkout Repo
+        uses: actions/checkout@v4
+      - name: 🏗 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - name: 💾 Install Project Dependencies
+        run: npm ci
+      - name: Get installed Playwright version
+        id: playwright-version
+        run: |
+          PLAYWRIGHT_VERSION=$(jq -r '.dependencies["@playwright/test"].version' package-lock.json)
+          echo "PLAYWRIGHT_VERSION=$PLAYWRIGHT_VERSION" >> $GITHUB_ENV
+          echo "PLAYWRIGHT_VERSION=$PLAYWRIGHT_VERSION"
+        shell: bash
+      - name: Cache playwright binaries
+        uses: actions/cache@v3
+        id: playwright-cache
+        with:
+          path: |
+            ~/.cache/ms-playwright
+          key: playwright-cache-${{ env.PLAYWRIGHT_VERSION }}
+      - name: Prepare Playwright
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps
+      - name: 🚀 Start Dev Server
+        run: npm run dev &
+        env:
+          NYT_API_KEY: ${{ secrets.NYT_API_KEY }}
+      - name: ⏱️ Wait for Dev Server to be Ready
+        run: npx wait-on http://localhost:3000 --timeout 300000 --interval 5000
+      - name: 🧪 Run E2E Tests
+        run: npm run test:e2e
+        env:
+          PLAYWRIGHT_TEST_BASE_URL: 'http://localhost:3000'
+          NYT_API_KEY: ${{ secrets.NYT_API_KEY }}
+
+  build-deploy:
+    name: 🚀 Build and Deploy to Vercel
+    needs: [unit-tests, e2e-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⬇️ Checkout Repo
+        uses: actions/checkout@v4
+      - name: 🏗 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - name: 💾 Install Vercel CLI
+        run: npm install --global vercel@latest
+      - name: ⬇️ Pull Vercel Environment Information from Production
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+      - name: 📦 Move Environment Variables to .env.production
+        run: |
+          if [ -f ".vercel/.env.production.local" ]; then
+            mv .vercel/.env.production.local .env.production
+          else
+            echo ".vercel/.env.production.local does not exist"
+            exit 1
+          fi
+      - name: 📦 Build Project Artifacts for Production
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+      - name: 🚀 Deploy Project Artifacts to Production
+        id: deploy
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
