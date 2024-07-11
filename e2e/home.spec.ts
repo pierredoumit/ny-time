@@ -8,7 +8,7 @@ test.describe('Home Page', () => {
   test('should render the home page with initial articles', async ({ page }) => {
     // Wait for the articles to be loaded
     await page.waitForTimeout(10000);
-    const articles = await page.locator('.p-4.border.rounded-lg');
+    const articles = page.locator('.p-4.border.rounded-lg');
     expect(await articles.count()).toBeGreaterThan(0);
   });
 
@@ -17,7 +17,7 @@ test.describe('Home Page', () => {
 
     // Wait for the articles to be loaded
     await page.waitForTimeout(10000);
-    const articles = await page.locator('.p-4.border.rounded-lg');
+    const articles = page.locator('.p-4.border.rounded-lg');
     expect(await articles.count()).toBeGreaterThan(0);
   });
 });

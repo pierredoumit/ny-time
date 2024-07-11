@@ -72,6 +72,11 @@ jobs:
         run: npm ci
       - name: 🧪 Run Unit Tests
         run: npm test -- --coverage
+      - name: 🔍 SonarQube Analysis
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: http://localhost:9000
 
   e2e-tests:
     name: 🧪 E2E Tests
