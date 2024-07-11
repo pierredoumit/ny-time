@@ -73,10 +73,9 @@ jobs:
       - name: 🧪 Run Unit Tests
         run: npm test -- --coverage
       - name: 🔍 SonarQube Analysis
-        uses: sonarsource/sonarqube-scan-action@master
+        uses: SonarSource/sonarcloud-github-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: https://sonarcloud.io
 
   e2e-tests:
     name: 🧪 E2E Tests
