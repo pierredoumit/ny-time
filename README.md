@@ -74,7 +74,7 @@ The project includes a comprehensive GitHub Actions workflow for automated testi
 
 ### Workflow Triggers
 
-The workflow is triggered by:
+The workflow is triggered by
 
 - Push events to the `main` branch.
 - Manual dispatch through the GitHub Actions interface.
